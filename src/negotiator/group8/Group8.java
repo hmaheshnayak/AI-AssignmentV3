@@ -2,22 +2,16 @@ package negotiator.group8;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
 import negotiator.AgentID;
 import negotiator.Bid;
 import negotiator.DeadlineType;
-import negotiator.Domain;
 import negotiator.Timeline;
 import negotiator.actions.Accept;
 import negotiator.actions.Action;
 import negotiator.actions.Inform;
 import negotiator.actions.Offer;
-import negotiator.issue.Issue;
-import negotiator.issue.Objective;
 import negotiator.parties.AbstractNegotiationParty;
-import negotiator.utility.EVALUATORTYPE;
-import negotiator.utility.Evaluator;
 import negotiator.utility.UtilitySpace;
 
 import java.lang.Math;

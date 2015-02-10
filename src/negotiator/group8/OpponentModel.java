@@ -160,7 +160,7 @@ public class OpponentModel {
 					currentFrequency = valueMapping.get(issueValue);
 					currentFrequency++;
 					
-					valueMapping.replace(issueValue, currentFrequency);
+					valueMapping.put(issueValue, currentFrequency);
 				}
 				else
 				{
