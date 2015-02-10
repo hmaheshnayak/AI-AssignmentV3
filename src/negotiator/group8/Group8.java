@@ -145,14 +145,26 @@ public class Group8 extends AbstractNegotiationParty {
 		if ((action instanceof Offer)) {
 			 lastBid = ((Offer)action).getBid();
 			 
-			Optional<OpponentModel> senderModel = this.otherParties.stream().filter(o -> o.agent.getPartyId() == senderAgent.getPartyId()).findFirst();
+			//Optional<OpponentModel> senderModel = this.otherParties.stream().filter(o -> o.agent.getPartyId() == senderAgent.getPartyId()).findFirst();
 			 
-			if (senderModel != null && senderModel.isPresent())
+			OpponentModel senderModel = null;
+			
+			for (OpponentModel opponent : this.otherParties)
+			{
+				if (opponent.agent.getPartyId() == senderAgent.getPartyId())
+				{
+					senderModel = opponent;
+					break;
+				}
+			}
+			
+			if (senderModel != null)
 			{
 				try
 				{
 					
-				senderModel.get().AddBid(lastBid);
+				//senderModel.get().AddBid(lastBid);
+					senderModel.AddBid(lastBid);
 				}
 				catch(Exception e)
 				{
