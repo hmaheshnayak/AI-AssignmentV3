@@ -37,8 +37,11 @@ public class OpponentModel {
 	private Map<Issue, Map<Value, Integer>> issueValueFrequencies;
 	
 	//mapping of Issues to their values and number of bids made for each value
-	Map<Issue, Map<Value, Integer>> sortedIssueValueFrequencies;
-			
+	private Map<Issue, Map<Value, Integer>> sortedIssueValueFrequencies;
+	
+	//mapping of Issues to their values and number of bids made for each value
+	private Map<Issue, Map<Value, Double>> issueEvaluationValues;
+		
 	/**
 	 * class constructor
 	 * @param opponentAgent agent whose preference is being modeled
@@ -59,15 +62,19 @@ public class OpponentModel {
 		
 		this.issueValueFrequencies = new HashMap<Issue, Map<Value, Integer>>();
 		
+		this.issueEvaluationValues = new HashMap<Issue, Map<Value,Double>>();
+		
 		//for each issue in domain, add an entry in list of preferences 
 		//initialize each issue with the initial weights
 		for(Issue issue : issuesInDomain)
 		{
 			this.issuePreferences.put(issue, new ArrayList<String>());
 			
-			this.issueWeights.put(issue, initialWeights);
+			this.issueWeights.put(issue, 0.0);
 			
 			this.issueValueFrequencies.put(issue, new HashMap<Value, Integer>());
+			
+			this.issueEvaluationValues.put(issue, new HashMap<Value, Double>());
 		}
 		
 	}
@@ -120,28 +127,91 @@ public class OpponentModel {
 	
 	public void AnalyzeIssueValuePreferences()
 	{
-		Iterator it = this.issueValueFrequencies.entrySet().iterator();
 		
+		Iterator it = this.issueValueFrequencies.entrySet().iterator();
 		
 		sortedIssueValueFrequencies = new HashMap<Issue, Map<Value,Integer>>();
 	
-		
 		while(it.hasNext()){
 			Map.Entry<Issue, Map<Value, Integer>> pair = (Map.Entry<Issue, Map<Value,Integer>>)it.next();
 			Issue issue = pair.getKey();
 			Map<Value,Integer> valueFrequecies = pair.getValue();
 			
+			double issueWeight = 1 /(double) valueFrequecies.size();
+			
+			this.issueWeights.put(issue, issueWeight);
+			
 			ValueComparator bvc =  new ValueComparator(valueFrequecies);
 	        TreeMap<Value,Integer> sorted_map = new TreeMap<Value,Integer>(bvc);
 	        sorted_map.putAll(valueFrequecies);
 	        
-	        System.out.println(sorted_map); 
+	        int highestFrequency = sorted_map.firstEntry().getValue();
+
+	        Iterator valueIterator = sorted_map.entrySet().iterator();
+	        Map<Value, Double> evals = new HashMap<Value, Double>();
+	        
+	        while(valueIterator.hasNext())
+	        {
+	        	Map.Entry<Value, Integer> valuePair = (Map.Entry<Value, Integer>)valueIterator.next();
+	        	
+	        	int valueFrequency = valuePair.getValue();
+	        	
+	        	double evaluationValue = valueFrequency / (double)highestFrequency;
+	        	
+	        	evals.put(valuePair.getKey(), evaluationValue);
+	        	
+	        }
+	        
+	        this.issueEvaluationValues.put(issue, evals);
 	        
 	        sortedIssueValueFrequencies.put(issue, sorted_map);
 	        
+
+	        System.out.println(highestFrequency);
+		}
+		
+		this.UpdateIssueWeights();
+		
+	}
+	
+	public void UpdateIssueWeights()
+	{
+		Iterator it = this.issueWeights.entrySet().iterator();
+		double weightSum = 0.0;
+		
+		while(it.hasNext())
+		{
+			Map.Entry<Value, Double> weightPair = (Map.Entry<Value, Double>)it.next();
+        	
+			weightSum += weightPair.getValue();
+		}
+		
+		it = this.issueWeights.entrySet().iterator();
+		
+		while(it.hasNext())
+		{
+			Map.Entry<Value, Double> weightPair = (Map.Entry<Value, Double>)it.next();
+        	
+			weightPair.setValue(weightPair.getValue() / weightSum);
 		}
 		
 	}
+	
+//	public void UpdateEvaluationValues()
+//	{
+//		Iterator it = this.sortedIssueValueFrequencies.entrySet().iterator();
+//		
+//		this.issueEvaluationValue = new HashMap<Issue, Map<Value,Integer>>();
+//		
+//		while(it.hasNext()){
+//			Map.Entry<Issue, Map<Value, Integer>> pair = (Map.Entry<Issue, Map<Value,Integer>>)it.next();
+//			Issue issue = pair.getKey();
+//			Map<Value,Integer> valueFrequecies = pair.getValue();
+//			
+//			int highestFrequency = valueFrequecies
+//		}
+//		
+//	}
 	
 	public void UpdateIssueValueFrequencies(Bid newBid) throws Exception
 	{
