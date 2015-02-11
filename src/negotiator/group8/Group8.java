@@ -50,12 +50,12 @@ public class Group8 extends AbstractNegotiationParty {
 	private Bid lastBid;
 	private List<OpponentModel> otherParties;
 	private AbstractNegotiationParty lastBidder;
-	private AbstractNegotiationParty nextBidder;
 	
 	@Override
 	public Action chooseAction(List<Class> validActions) {
 		double tempAcceptanceValue = this.acceptanceValue;
 		tempAcceptanceValue = 0.9 + 1 - Math.pow(Math.pow(1.9, 1/this.totalRounds), Math.pow(this.acceptanceValue,(this.totalRounds) / this.roundCounter ) * (this.roundCounter-1));
+
 		this.roundCounter++;
 		
 		System.out.println(this.roundCounter);
@@ -211,7 +211,7 @@ public class Group8 extends AbstractNegotiationParty {
             util = 0.0;
         }
         
-        if (util < utilityValue || util > (utilityValue + 0.1))
+        if (util > utilityValue && util < (utilityValue + 0.05))
         {
         	randomBidsList.add(randomBid);
         }
