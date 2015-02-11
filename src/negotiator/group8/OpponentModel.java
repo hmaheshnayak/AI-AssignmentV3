@@ -52,11 +52,6 @@ public class OpponentModel {
 		
 		List<Issue> issuesInDomain = this.agent.getUtilitySpace().getDomain().getIssues();
 		
-		//initialize issue with equal weights assigned to all issues 
-		//such that their sum equals 1
-		int issueCount = issuesInDomain.size();
-		double initialWeights = 1.0 / issueCount;
-		
 		this.issuePreferences = new HashMap<Issue, List<String>>();
 		this.issueWeights = new HashMap<Issue, Double>();
 		
@@ -201,7 +196,6 @@ public class OpponentModel {
 	        sortedIssueValueFrequencies.put(issue, sorted_map);
 	        
 
-	        System.out.println(highestFrequency);
 		}
 		
 		this.UpdateIssueWeights();
@@ -230,27 +224,9 @@ public class OpponentModel {
 		}
 		
 	}
-	
-//	public void UpdateEvaluationValues()
-//	{
-//		Iterator it = this.sortedIssueValueFrequencies.entrySet().iterator();
-//		
-//		this.issueEvaluationValue = new HashMap<Issue, Map<Value,Integer>>();
-//		
-//		while(it.hasNext()){
-//			Map.Entry<Issue, Map<Value, Integer>> pair = (Map.Entry<Issue, Map<Value,Integer>>)it.next();
-//			Issue issue = pair.getKey();
-//			Map<Value,Integer> valueFrequecies = pair.getValue();
-//			
-//			int highestFrequency = valueFrequecies
-//		}
-//		
-//	}
-	
+
 	public void UpdateIssueValueFrequencies(Bid newBid) throws Exception
 	{
-//		for (Bid bid : this.bidsMadeByAgent)
-//		{
 			for (int i = 0; i < newBid.getIssues().size(); i++)
 			{
 				Issue issue = newBid.getIssues().get(i);
@@ -272,8 +248,7 @@ public class OpponentModel {
 					valueMapping.put(issueValue, currentFrequency);
 				}
 			}
-//		}
-//		}
+
 		
 	}
 	
@@ -282,27 +257,7 @@ public class OpponentModel {
 	 * they are equal if they encapsulate the same agent, determined by agentID
 	 * @param object object being compared
 	 */
-//	@Override
-//	public boolean equals(Object object)
-//	{
-//		boolean result = false;
-//		
-//		if (object == null) 
-//		{
-//		    result = false;
-//		} 
-//		else 
-//		{
-//			AbstractNegotiationParty party = (AbstractNegotiationParty)object;
-//			
-//			if (this.agent.getPartyId() == party.getPartyId())
-//			{
-//				result = true;
-//			}
-//		}
-//		
-//		return result;
-//	}
+
 	
 	@Override
 	public boolean equals(Object object)

@@ -3,7 +3,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import negotiator.AgentID;
 import negotiator.Bid;
 import negotiator.DeadlineType;
 import negotiator.Timeline;
@@ -35,8 +34,6 @@ public class Group8 extends AbstractNegotiationParty {
 		// Make sure that this constructor calls it's parent.
 		super(utilitySpace, deadlines, timeline, randomSeed);
 		this.totalRounds = timeline.getTotalTime() - 1;
-		this.opponents = new ArrayList<OpponentBid>();
-		//this.BuildPreferenceProfile();
 	}
 	
 	/**
@@ -47,38 +44,22 @@ public class Group8 extends AbstractNegotiationParty {
 	 * @return The chosen action.
 	 */
 	
-	private List<AgentID> ids = new ArrayList();
-	private List<OpponentBid> opponents ;
 	private double acceptanceValue = 0.9;
-	private int roundCount  = 1;
 	private double totalRounds;
-	private int round = 1;
 	private int roundCounter = 0;
 	private Bid lastBid;
 	private List<OpponentModel> otherParties;
 	private AbstractNegotiationParty lastBidder;
+	private AbstractNegotiationParty nextBidder;
 	
 	@Override
 	public Action chooseAction(List<Class> validActions) {
 		double tempAcceptanceValue = this.acceptanceValue;
-		tempAcceptanceValue = 0.9 + 1 - Math.pow(Math.pow(1.9, 1/this.totalRounds), Math.pow(this.acceptanceValue,(this.totalRounds%this.round) / this.round ) * (this.round-1));
-		//tempAcceptanceValue = 0.9 + 1 - Math.pow(1.11,0.1 * (this.round-1));
+		tempAcceptanceValue = 0.9 + 1 - Math.pow(Math.pow(1.9, 1/this.totalRounds), Math.pow(this.acceptanceValue,(this.totalRounds) / this.roundCounter ) * (this.roundCounter-1));
 		this.roundCounter++;
-		if(this.roundCounter== 50){
-			//System.out.println(this.opponents.get(0).issueWeight.values());
-		}
-
-		if(this.roundCount % 3 == 0){
-			this.round ++ ;
-			this.roundCount = 1;
-		}
-		else{
-			this.roundCount ++ ;
-		}
+		
+		System.out.println(this.roundCounter);
 		double lastBidUtility;
-		//this.acceptanceValue -= 0.01;
-		// with 50% chance, counter offer
-		// if we are the first party, also offer.
 		if (!validActions.contains(Accept.class)) {
 			return new Offer(generateHigherUtilityBid(tempAcceptanceValue).get(0));
 		}
@@ -97,7 +78,7 @@ public class Group8 extends AbstractNegotiationParty {
 			{
 				List<Bid> possibleBids = generateHigherUtilityBid(tempAcceptanceValue);
 				
-				if (this.round < 5)
+				if (this.roundCounter < 5)
 				{
 					return new Offer(possibleBids.get(0));
 				}
@@ -109,7 +90,9 @@ public class Group8 extends AbstractNegotiationParty {
 					{
 						if (opponent.agent.getPartyId() == this.lastBidder.getPartyId())
 						{
-							senderModel = opponent;
+							int index = this.otherParties.indexOf(lastBidder);
+							//senderModel = opponent;
+							senderModel = this.otherParties.get((index + 1)%this.otherParties.size());
 							break;
 						}
 					}
@@ -204,20 +187,6 @@ public class Group8 extends AbstractNegotiationParty {
 					return;
 				}
 			}
-//			if(!ids.contains(senderAgent.getPartyId()))	{
-//				ids.add(senderAgent.getPartyId());
-//				OpponentBid opponent = new OpponentBid(lastBid.getIssues(),senderAgent.getPartyId());
-//				opponent.initializeIssueList(lastBid);
-//				opponents.add(opponent);
-//			}
-//		         
-//		          for (OpponentBid opponent: opponents){
-//		        	  if(senderAgent.getPartyId() == opponent.id){
-//		        		  opponent.bids.add(lastBid);
-//		        		
-//		        	  }
-//		          }
-//		         
 			}
 		
 		// Here you can listen to other parties' messages		
@@ -249,8 +218,6 @@ public class Group8 extends AbstractNegotiationParty {
         
         }
         while(randomBidsList.size() < 5);
-//        while (util < utilityValue || util > (utilityValue + 0.1));
-        
         return randomBidsList;
     }
 
