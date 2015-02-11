@@ -79,6 +79,42 @@ public class OpponentModel {
 		
 	}
 	
+	public double EvaluateBidUtility(Bid bidToEvaluate)
+	{
+		double utilityValue = 0.0;
+		
+		for (int i = 0; i < bidToEvaluate.getIssues().size(); i++)
+		{
+			Issue issue = bidToEvaluate.getIssues().get(i);
+			
+			Value issueValue = null;
+			
+			try {
+				issueValue = bidToEvaluate.getValue(i + 1);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			if (issueValue != null)
+			{
+				double issueWeight = this.issueWeights.get(issue);
+				
+				Map<Value, Double> evaluationValues = this.issueEvaluationValues.get(issue);
+				double evaluationValue = 0.0;
+				
+				if (evaluationValues.isEmpty() == false && evaluationValues.containsKey(issueValue))
+				{
+					evaluationValue = evaluationValues.get(issueValue);
+				}
+				
+				utilityValue += issueWeight * evaluationValue;
+			}
+		}
+		
+		return utilityValue;
+	}
+	
 	//store bids made by this opponent in private list
 	public void AddBid(Bid bid)
 	{
@@ -100,10 +136,8 @@ public class OpponentModel {
 			return;
 		}
 		
-		if (this.bidsMadeByAgent.size() > 10)
-		{
-			this.AnalyzeIssueValuePreferences();
-		}
+
+		this.AnalyzeIssueValuePreferences();
 		
 	}
 	
