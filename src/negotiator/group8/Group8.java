@@ -56,12 +56,13 @@ public class Group8 extends AbstractNegotiationParty {
 	private int roundCounter = 0;
 	private Bid lastBid;
 	private List<OpponentModel> otherParties;
+	private AbstractNegotiationParty lastBidder;
 	
 	@Override
 	public Action chooseAction(List<Class> validActions) {
 		double tempAcceptanceValue = this.acceptanceValue;
-		//tempAcceptanceValue = 0.9 + 1 - Math.pow(Math.pow(1.9, 1/this.totalRounds), Math.pow(this.acceptanceValue,(this.totalRounds%this.round) / this.round ) * (this.round-1));
-		tempAcceptanceValue = 0.9 + 1 - Math.pow(1.11,0.1 * (this.round-1));
+		tempAcceptanceValue = 0.9 + 1 - Math.pow(Math.pow(1.9, 1/this.totalRounds), Math.pow(this.acceptanceValue,(this.totalRounds%this.round) / this.round ) * (this.round-1));
+		//tempAcceptanceValue = 0.9 + 1 - Math.pow(1.11,0.1 * (this.round-1));
 		this.roundCounter++;
 		if(this.roundCounter== 50){
 			//System.out.println(this.opponents.get(0).issueWeight.values());
@@ -79,7 +80,7 @@ public class Group8 extends AbstractNegotiationParty {
 		// with 50% chance, counter offer
 		// if we are the first party, also offer.
 		if (!validActions.contains(Accept.class)) {
-			return new Offer(generateHigherUtilityBid(tempAcceptanceValue));
+			return new Offer(generateHigherUtilityBid(tempAcceptanceValue).get(0));
 		}
 		else
 		{
@@ -93,9 +94,45 @@ public class Group8 extends AbstractNegotiationParty {
 			if(lastBidUtility >= tempAcceptanceValue)
 				return new Accept();
 			else 
-				return new Offer(generateHigherUtilityBid(tempAcceptanceValue));
+			{
+				List<Bid> possibleBids = generateHigherUtilityBid(tempAcceptanceValue);
+				
+				if (this.round < 5)
+				{
+					return new Offer(possibleBids.get(0));
+				}
+				else
+				{
+					OpponentModel senderModel = null;
+					
+					for (OpponentModel opponent : this.otherParties)
+					{
+						if (opponent.agent.getPartyId() == this.lastBidder.getPartyId())
+						{
+							senderModel = opponent;
+							break;
+						}
+					}
+					
+					double maxUtilityForOpponent = 0.0;
+					Bid bestBid = null;
+					
+					for (Bid bid : possibleBids)
+					{
+						double bidUtility = senderModel.EvaluateBidUtility(bid);
+						
+						if (bidUtility > maxUtilityForOpponent)
+						{
+							bestBid = bid;
+							maxUtilityForOpponent = bidUtility;
+						}
+					}
+					
+					return new Offer(bestBid);
+				}
+				
+			}
 		}
-		
 	}
 
 
@@ -127,7 +164,7 @@ public class Group8 extends AbstractNegotiationParty {
 		}
 		
 		AbstractNegotiationParty senderAgent = (AbstractNegotiationParty)sender;
-	
+		this.lastBidder = senderAgent;
 		
 		//add sender agent to list of other parties if not present
 		if (this.otherParties.contains(new OpponentModel(senderAgent)) == false)
@@ -188,25 +225,34 @@ public class Group8 extends AbstractNegotiationParty {
 	/*
 	* generates random bids which have higher utility than your reservation value
 	*/
-	private Bid generateHigherUtilityBid(double utilityValue)
-	    {
-	        Bid randomBid;
-	        double util;
-	        do
-	        {
-	        	randomBid = generateRandomBid();
-	        try
-	        {
-	            util = utilitySpace.getUtility(randomBid);
-	        } catch (Exception e)
-	        {
-	            util = 0.0;
-	        }
-	        }
-	        while (util < utilityValue || util > (utilityValue + 0.1));
-	        
-	        return randomBid;
-	    }
+	private List<Bid> generateHigherUtilityBid(double utilityValue)
+    {
+        Bid randomBid;
+        List<Bid> randomBidsList = new ArrayList<Bid>();
+        
+        double util;
+        do
+        {
+        	randomBid = generateRandomBid();
+        try
+        {
+            util = utilitySpace.getUtility(randomBid);
+        } catch (Exception e)
+        {
+            util = 0.0;
+        }
+        
+        if (util < utilityValue || util > (utilityValue + 0.1))
+        {
+        	randomBidsList.add(randomBid);
+        }
+        
+        }
+        while(randomBidsList.size() < 5);
+//        while (util < utilityValue || util > (utilityValue + 0.1));
+        
+        return randomBidsList;
+    }
 
 
 
