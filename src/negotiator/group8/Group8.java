@@ -19,6 +19,13 @@ import java.lang.Math;
  */
 public class Group8 extends AbstractNegotiationParty {
 
+	private double acceptanceValue = 0.9;
+	private double totalRounds;
+	private int roundCounter = 0;
+	private Bid lastBid;
+	private List<OpponentModel> otherParties;
+	private AbstractNegotiationParty lastBidder;
+	
 	/**
 	 * Please keep this constructor. This is called by genius.
 	 *
@@ -43,22 +50,12 @@ public class Group8 extends AbstractNegotiationParty {
 	 * @param validActions Either a list containing both accept and offer or only offer.
 	 * @return The chosen action.
 	 */
-	
-	private double acceptanceValue = 0.9;
-	private double totalRounds;
-	private int roundCounter = 0;
-	private Bid lastBid;
-	private List<OpponentModel> otherParties;
-	private AbstractNegotiationParty lastBidder;
-	
 	@Override
 	public Action chooseAction(List<Class> validActions) {
 		double tempAcceptanceValue = this.acceptanceValue;
 		tempAcceptanceValue = 0.9 + 1 - Math.pow(Math.pow(1.9, 1/this.totalRounds), Math.pow(this.acceptanceValue,(this.totalRounds) / this.roundCounter ) * (this.roundCounter-1));
-
 		this.roundCounter++;
 		
-		System.out.println(this.roundCounter);
 		double lastBidUtility;
 		if (!validActions.contains(Accept.class)) {
 			return new Offer(generateHigherUtilityBid(tempAcceptanceValue).get(0));
@@ -88,7 +85,7 @@ public class Group8 extends AbstractNegotiationParty {
 					
 					for (OpponentModel opponent : this.otherParties)
 					{
-						if (opponent.agent.getPartyId() == this.lastBidder.getPartyId())
+						if (opponent.agent.getPartyId().equals(this.lastBidder.getPartyId()))
 						{
 							int index = this.otherParties.indexOf(lastBidder);
 							//senderModel = opponent;
