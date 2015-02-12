@@ -14,17 +14,29 @@ import negotiator.parties.AbstractNegotiationParty;
 import negotiator.utility.UtilitySpace;
 
 import java.lang.Math;
+
 /**
  * This is your negotiation party.
  */
 public class Group8 extends AbstractNegotiationParty {
 
-	private double acceptanceValue = 0.9;
+	//utility value above which bids will be accepted
+	private double acceptanceValue;
+	
+	//number of rounds available for negotiation
 	private double totalRounds;
-	private int roundCounter = 0;
-	private Bid lastBid;
-	private List<OpponentModel> otherParties;
-	private AbstractNegotiationParty lastBidder;
+	
+	//number of rounds of negotiation completed
+	private int roundCounter;
+	
+	//most recent bid
+	private Bid mostRecentBid;
+	
+	//most recent bidder
+	private AbstractNegotiationParty mostRecentBidder;
+	
+	//list of opponents modeled by opponentModel class
+	private List<OpponentModel> opponents;
 	
 	/**
 	 * Please keep this constructor. This is called by genius.
@@ -40,7 +52,13 @@ public class Group8 extends AbstractNegotiationParty {
 				  long randomSeed) {
 		// Make sure that this constructor calls it's parent.
 		super(utilitySpace, deadlines, timeline, randomSeed);
+		
+		//get total number of rounds available from the environment
 		this.totalRounds = timeline.getTotalTime() - 1;
+		
+		this.roundCounter = 0;
+		
+		this.acceptanceValue = 0.5;
 	}
 	
 	/**
@@ -52,23 +70,26 @@ public class Group8 extends AbstractNegotiationParty {
 	 */
 	@Override
 	public Action chooseAction(List<Class> validActions) {
-		double tempAcceptanceValue = this.acceptanceValue;
-		tempAcceptanceValue = 0.9 + 1 - Math.pow(Math.pow(1.9, 1/this.totalRounds), Math.pow(this.acceptanceValue,(this.totalRounds) / this.roundCounter ) * (this.roundCounter-1));
 		this.roundCounter++;
 		
-		double lastBidUtility;
+		double tempAcceptanceValue = this.acceptanceValue;
+		tempAcceptanceValue = 0.9 + 1 - Math.pow(Math.pow(1.9, 1/this.totalRounds), Math.pow(this.acceptanceValue,(this.totalRounds) / this.roundCounter ) * (this.roundCounter-1));
+		
 		if (!validActions.contains(Accept.class)) {
 			return new Offer(generateHigherUtilityBid(tempAcceptanceValue).get(0));
 		}
 		else
 		{
+			double lastBidUtility;
+			
 			try {
-				lastBidUtility = this.utilitySpace.getUtility(this.lastBid);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
+				lastBidUtility = this.utilitySpace.getUtility(this.mostRecentBid);
+			} 
+			catch (Exception e) {
 				lastBidUtility = 0;
 				e.printStackTrace();
 			}
+			
 			if(lastBidUtility >= tempAcceptanceValue)
 				return new Accept();
 			else 
@@ -83,13 +104,13 @@ public class Group8 extends AbstractNegotiationParty {
 				{
 					OpponentModel senderModel = null;
 					
-					for (OpponentModel opponent : this.otherParties)
+					for (OpponentModel opponent : this.opponents)
 					{
-						if (opponent.agent.getPartyId().equals(this.lastBidder.getPartyId()))
+						if (opponent.agent.getPartyId().equals(this.mostRecentBidder.getPartyId()))
 						{
-							int index = this.otherParties.indexOf(lastBidder);
+							int index = this.opponents.indexOf(mostRecentBidder);
 							//senderModel = opponent;
-							senderModel = this.otherParties.get((index + 1)%this.otherParties.size());
+							senderModel = this.opponents.get((index + 1)%this.opponents.size());
 							break;
 						}
 					}
@@ -137,30 +158,30 @@ public class Group8 extends AbstractNegotiationParty {
 			//initialize list of other parties
 			if (numberOfAgents > 1)
 			{
-				this.otherParties = new ArrayList<OpponentModel>();
+				this.opponents = new ArrayList<OpponentModel>();
 			}
 			
 			return;
 		}
 		
 		AbstractNegotiationParty senderAgent = (AbstractNegotiationParty)sender;
-		this.lastBidder = senderAgent;
+		this.mostRecentBidder = senderAgent;
 		
 		//add sender agent to list of other parties if not present
-		if (this.otherParties.contains(new OpponentModel(senderAgent)) == false)
+		if (this.opponents.contains(new OpponentModel(senderAgent)) == false)
 		{
 			OpponentModel newOpponent = new OpponentModel(senderAgent);
-			this.otherParties.add(newOpponent);
+			this.opponents.add(newOpponent);
 		}
 		
 		if ((action instanceof Offer)) {
-			 lastBid = ((Offer)action).getBid();
+			 mostRecentBid = ((Offer)action).getBid();
 			 
 			//Optional<OpponentModel> senderModel = this.otherParties.stream().filter(o -> o.agent.getPartyId() == senderAgent.getPartyId()).findFirst();
 			 
 			OpponentModel senderModel = null;
 			
-			for (OpponentModel opponent : this.otherParties)
+			for (OpponentModel opponent : this.opponents)
 			{
 				if (opponent.agent.getPartyId() == senderAgent.getPartyId())
 				{
@@ -175,7 +196,7 @@ public class Group8 extends AbstractNegotiationParty {
 				{
 					
 				//senderModel.get().AddBid(lastBid);
-					senderModel.AddBid(lastBid);
+					senderModel.AddBid(mostRecentBid);
 				}
 				catch(Exception e)
 				{
