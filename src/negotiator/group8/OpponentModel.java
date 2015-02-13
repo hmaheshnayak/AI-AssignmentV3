@@ -109,24 +109,17 @@ public class OpponentModel {
 	 * @param bid
 	 */
 	public void AddBid(Bid bid) {
+		
 		if (bid != null) {
 			this.bidsMadeByAgent.add(bid);
 			
-			try {
-				this.UpdateIssueValueFrequencies(bid);
-			} 
-			catch (Exception e) {
-				e.printStackTrace();
-				return;
-			}
+			this.UpdateIssueValueFrequencies(bid);
 		}
 		
 		this.AnalyzeIssueValuePreferences();
 	}
 	
-	public void AnalyzeIssueValuePreferences()
-	{
-		
+	public void AnalyzeIssueValuePreferences() {
 		Iterator it = this.issueValueFrequencies.entrySet().iterator();
 		
 		sortedIssueValueFrequencies = new HashMap<Issue, Map<Value,Integer>>();
@@ -192,12 +185,20 @@ public class OpponentModel {
 		
 	}
 
-	public void UpdateIssueValueFrequencies(Bid newBid) throws Exception
+	public void UpdateIssueValueFrequencies(Bid newBid)
 	{
 			for (int i = 0; i < newBid.getIssues().size(); i++)
 			{
 				Issue issue = newBid.getIssues().get(i);
-				Value issueValue = newBid.getValue(i+1);
+				Value issueValue = null;
+				
+				try {
+					issueValue = newBid.getValue(i+1);
+				}
+				catch(Exception e){
+					e.printStackTrace();
+					return;
+				}
 				
 				Map<Value, Integer> valueMapping = issueValueFrequencies.get(issue);
 				
