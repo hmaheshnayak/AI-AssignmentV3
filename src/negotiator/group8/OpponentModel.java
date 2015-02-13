@@ -21,17 +21,14 @@ import negotiator.parties.AbstractNegotiationParty;
  */
 public class OpponentModel {
 	
-	//opponent agent
+	//agent being modeled
 	public AbstractNegotiationParty agent;
-	
-	//list of issues and their associated value preferences in descending order
-	private Map<Issue, List<String>> issuePreferences;
-	
-	//list of issues and their associated weights
-	private Map<Issue, Double> issueWeights; 
 	
 	//list of bids made by agent
 	private List<Bid> bidsMadeByAgent;
+	
+	//list of issues and their associated weights
+	private Map<Issue, Double> issueWeights; 
 	
 	//mapping of Issues to their values and number of bids made for each value
 	private Map<Issue, Map<Value, Integer>> issueValueFrequencies;
@@ -46,60 +43,57 @@ public class OpponentModel {
 	 * class constructor
 	 * @param opponentAgent agent whose preference is being modeled
 	 */
-	public OpponentModel(AbstractNegotiationParty opponentAgent)
-	{
+	public OpponentModel(AbstractNegotiationParty opponentAgent) {
+		
 		this.agent = opponentAgent;
 		
+		this.bidsMadeByAgent = new ArrayList<Bid>();
+		
+		//get the issues that are in the domain
 		List<Issue> issuesInDomain = this.agent.getUtilitySpace().getDomain().getIssues();
 		
-		this.issuePreferences = new HashMap<Issue, List<String>>();
 		this.issueWeights = new HashMap<Issue, Double>();
-		
 		this.issueValueFrequencies = new HashMap<Issue, Map<Value, Integer>>();
-		
 		this.issueEvaluationValues = new HashMap<Issue, Map<Value,Double>>();
 		
 		//for each issue in domain, add an entry in list of preferences 
 		//initialize each issue with the initial weights
-		for(Issue issue : issuesInDomain)
-		{
-			this.issuePreferences.put(issue, new ArrayList<String>());
-			
+		for(Issue issue : issuesInDomain) {	
 			this.issueWeights.put(issue, 0.0);
 			
 			this.issueValueFrequencies.put(issue, new HashMap<Value, Integer>());
 			
 			this.issueEvaluationValues.put(issue, new HashMap<Value, Double>());
 		}
-		
 	}
 	
-	public double EvaluateBidUtility(Bid bidToEvaluate)
-	{
+	/**
+	 * method to evaluate the utility of a bid for this agent
+	 * @param bidToEvaluate bid whose utility to evaluate
+	 * @return utility of bid for this agent
+	 */
+	public double EvaluateBidUtility(Bid bidToEvaluate) {
 		double utilityValue = 0.0;
 		
-		for (int i = 0; i < bidToEvaluate.getIssues().size(); i++)
-		{
+		// utility value = u1 * w1 + u2 * w2 + ...
+		for (int i = 0; i < bidToEvaluate.getIssues().size(); i++) {
 			Issue issue = bidToEvaluate.getIssues().get(i);
-			
 			Value issueValue = null;
 			
 			try {
 				issueValue = bidToEvaluate.getValue(i + 1);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
+			} 
+			catch (Exception e) {
 				e.printStackTrace();
 			}
 			
-			if (issueValue != null)
-			{
+			if (issueValue != null) {
 				double issueWeight = this.issueWeights.get(issue);
 				
 				Map<Value, Double> evaluationValues = this.issueEvaluationValues.get(issue);
 				double evaluationValue = 0.0;
 				
-				if (evaluationValues.isEmpty() == false && evaluationValues.containsKey(issueValue))
-				{
+				if (evaluationValues.isEmpty() == false && evaluationValues.containsKey(issueValue)){
 					evaluationValue = evaluationValues.get(issueValue);
 				}
 				
@@ -110,49 +104,25 @@ public class OpponentModel {
 		return utilityValue;
 	}
 	
-	//store bids made by this opponent in private list
-	public void AddBid(Bid bid)
-	{
-		if (this.bidsMadeByAgent == null)
-		{
-			this.bidsMadeByAgent = new ArrayList<Bid>();
-		}
-		
-		if (bid != null)
-		{
+	/**
+	 * store bids made by this opponent for preference analysis
+	 * @param bid
+	 */
+	public void AddBid(Bid bid) {
+		if (bid != null) {
 			this.bidsMadeByAgent.add(bid);
+			
+			try {
+				this.UpdateIssueValueFrequencies(bid);
+			} 
+			catch (Exception e) {
+				e.printStackTrace();
+				return;
+			}
 		}
 		
-		try {
-			this.UpdateIssueValueFrequencies(bid);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			return;
-		}
-		
-
 		this.AnalyzeIssueValuePreferences();
-		
 	}
-	
-	class ValueComparator implements Comparator<Value> {
-
-	    Map<Value, Integer> base;
-	    public ValueComparator(Map<Value, Integer> base) {
-	        this.base = base;
-	    }
-
-	    // Note: this comparator imposes orderings that are inconsistent with equals.    
-	    public int compare(Value a, Value b) {
-	        if (base.get(a) >= base.get(b)) {
-	            return -1;
-	        } else {
-	            return 1;
-	        } // returning 0 would merge keys
-	    }
-	}
-	
 	
 	public void AnalyzeIssueValuePreferences()
 	{
@@ -194,12 +164,9 @@ public class OpponentModel {
 	        this.issueEvaluationValues.put(issue, evals);
 	        
 	        sortedIssueValueFrequencies.put(issue, sorted_map);
-	        
-
 		}
 		
 		this.UpdateIssueWeights();
-		
 	}
 	
 	public void UpdateIssueWeights()
@@ -254,11 +221,9 @@ public class OpponentModel {
 	
 	/**
 	 * overridden equals method to compare two OpponentModel objects
-	 * they are equal if they encapsulate the same agent, determined by agentID
+	 * they are equal if they model the same agent, determined by agentID
 	 * @param object object being compared
 	 */
-
-	
 	@Override
 	public boolean equals(Object object)
 	{
@@ -275,5 +240,27 @@ public class OpponentModel {
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * Class that is used to compare issue values
+	 * @author Group8
+	 *
+	 */
+	class ValueComparator implements Comparator<Value> {
+
+	    Map<Value, Integer> base;
+	    public ValueComparator(Map<Value, Integer> base) {
+	        this.base = base;
+	    }
+
+	    // Note: this comparator imposes orderings that are inconsistent with equals.    
+	    public int compare(Value a, Value b) {
+	        if (base.get(a) >= base.get(b)) {
+	            return -1;
+	        } else {
+	            return 1;
+	        } // returning 0 would merge keys
+	    }
 	}
 }

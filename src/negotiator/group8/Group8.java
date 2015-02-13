@@ -153,7 +153,7 @@ public class Group8 extends AbstractNegotiationParty {
 	 */
 	@Override
 	public void receiveMessage(Object sender, Action action) {
-		
+		//handle first message from framework to initialize list of opponents
 		if (sender.equals("Protocol")) {
 			super.receiveMessage(sender, action);
 			
@@ -178,7 +178,7 @@ public class Group8 extends AbstractNegotiationParty {
 			this.opponents.add(newOpponent);
 		}
 		
-		
+		//store sender agent bid in its model among list of opponents
 		if ((action instanceof Offer)) {
 			mostRecentBid = ((Offer)action).getBid();
 			
@@ -206,38 +206,33 @@ public class Group8 extends AbstractNegotiationParty {
 		}	
 	}
 	
-	/*
-	* generates random bids which have higher utility than your reservation value
-	*/
+	/**
+	 * generates random bids which have higher utility than your reservation value
+	 *
+	 * @param utilityValue lower bound of utility value for randomly generated bids
+	 */
 	private List<Bid> generateHigherUtilityBid(double utilityValue)
     {
         Bid randomBid;
         List<Bid> randomBidsList = new ArrayList<Bid>();
-        
-        int counter = 0;
-        
+
         double util;
-        do
-        {
-        	counter++;
+        do {
         	randomBid = generateRandomBid();
-        try
-        {
-            util = utilitySpace.getUtility(randomBid);
-        } catch (Exception e)
-        {
-            util = 0.0;
+        	
+	        try {
+	            util = utilitySpace.getUtility(randomBid);
+	        } 
+	        catch (Exception e) {
+	            util = 0.0;
+	        }
+	        
+	        if (util > utilityValue && util < (utilityValue + 0.05)) {
+	        	randomBidsList.add(randomBid);
+	        }
         }
-        
-        if (util > utilityValue && util < (utilityValue + 0.05))
-        {
-        	randomBidsList.add(randomBid);
-        }
-        
-        }
-        while(counter < 100);
-        
-        System.out.println(randomBidsList.size());
+        while(randomBidsList.size() < 10);
+
         return randomBidsList;
     }
 
