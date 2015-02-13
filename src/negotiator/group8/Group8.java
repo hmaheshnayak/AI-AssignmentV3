@@ -114,9 +114,7 @@ public class Group8 extends AbstractNegotiationParty {
 					OpponentModel nextAgent = null;
 					
 					for (OpponentModel opponent : this.opponents) {
-						
 						if (opponent.agent.getPartyId().equals(this.mostRecentBidder.getPartyId())) {
-							
 							int indexOfPreviousBidder = this.opponents.indexOf(mostRecentBidder);
 							
 							int indexOfNextAgent = (indexOfPreviousBidder + 1)%this.opponents.size();
@@ -130,12 +128,10 @@ public class Group8 extends AbstractNegotiationParty {
 					double maxUtilityForOpponent = 0.0;
 					Bid bestBidForNextAgent = null;
 					
-					for (Bid bid : possibleBids)
-					{
+					for (Bid bid : possibleBids) {
 						double bidUtility = nextAgent.EvaluateBidUtility(bid);
 						
-						if (bidUtility > maxUtilityForOpponent)
-						{
+						if (bidUtility > maxUtilityForOpponent) {
 							bestBidForNextAgent = bid;
 							maxUtilityForOpponent = bidUtility;
 						}
@@ -143,7 +139,6 @@ public class Group8 extends AbstractNegotiationParty {
 					
 					return new Offer(bestBidForNextAgent);
 				}
-				
 			}
 		}
 	}
@@ -159,8 +154,7 @@ public class Group8 extends AbstractNegotiationParty {
 	@Override
 	public void receiveMessage(Object sender, Action action) {
 		
-		if (sender.equals("Protocol"))
-		{
+		if (sender.equals("Protocol")) {
 			super.receiveMessage(sender, action);
 			
 			//get number of agents in the negotiation
@@ -172,7 +166,6 @@ public class Group8 extends AbstractNegotiationParty {
 			{
 				this.opponents = new ArrayList<OpponentModel>();
 			}
-			
 			return;
 		}
 		
@@ -180,17 +173,15 @@ public class Group8 extends AbstractNegotiationParty {
 		this.mostRecentBidder = senderAgent;
 		
 		//add sender agent to list of other parties if not present
-		if (this.opponents.contains(new OpponentModel(senderAgent)) == false)
-		{
+		if (this.opponents.contains(new OpponentModel(senderAgent)) == false) {
 			OpponentModel newOpponent = new OpponentModel(senderAgent);
 			this.opponents.add(newOpponent);
 		}
 		
+		
 		if ((action instanceof Offer)) {
-			 mostRecentBid = ((Offer)action).getBid();
-			 
-			//Optional<OpponentModel> senderModel = this.otherParties.stream().filter(o -> o.agent.getPartyId() == senderAgent.getPartyId()).findFirst();
-			 
+			mostRecentBid = ((Offer)action).getBid();
+			
 			OpponentModel senderModel = null;
 			
 			for (OpponentModel opponent : this.opponents)
@@ -204,23 +195,17 @@ public class Group8 extends AbstractNegotiationParty {
 			
 			if (senderModel != null)
 			{
-				try
-				{
-					
-				//senderModel.get().AddBid(lastBid);
+				try {
 					senderModel.AddBid(mostRecentBid);
 				}
-				catch(Exception e)
-				{
+				catch(Exception e) {
 					e.printStackTrace();
-					
 					return;
 				}
 			}
-			}
-		
-		// Here you can listen to other parties' messages		
+		}	
 	}
+	
 	/*
 	* generates random bids which have higher utility than your reservation value
 	*/
@@ -229,9 +214,12 @@ public class Group8 extends AbstractNegotiationParty {
         Bid randomBid;
         List<Bid> randomBidsList = new ArrayList<Bid>();
         
+        int counter = 0;
+        
         double util;
         do
         {
+        	counter++;
         	randomBid = generateRandomBid();
         try
         {
@@ -247,7 +235,9 @@ public class Group8 extends AbstractNegotiationParty {
         }
         
         }
-        while(randomBidsList.size() < 5);
+        while(counter < 100);
+        
+        System.out.println(randomBidsList.size());
         return randomBidsList;
     }
 
