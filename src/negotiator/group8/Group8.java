@@ -112,23 +112,11 @@ public class Group8 extends AbstractNegotiationParty {
 				}
 				//among high utility bids choose one that has best utility for next agent
 				else {
-					//find next agent among list of opponents
-					OpponentModel nextAgent = null;
-					
-					for (OpponentModel opponent : this.opponents) {
-						if (opponent.agent.getPartyId().equals(this.mostRecentBidder.getPartyId())) {
-							int indexOfPreviousBidder = this.opponents.indexOf(mostRecentBidder);
-							
-							int indexOfNextAgent = (indexOfPreviousBidder + 1)%this.opponents.size();
-							
-							nextAgent = this.opponents.get(indexOfNextAgent);
-							break;
-						}
-					}
-					
 					//find bid with highest utility for next agent
 					double maxUtilityForOpponent = 0.0;
 					Bid bestBidForNextAgent = null;
+					
+					OpponentModel nextAgent = getNextAgentModel();
 					
 					for (Bid bid : possibleBids) {
 						double bidUtility = nextAgent.EvaluateBidUtility(bid);
@@ -143,6 +131,26 @@ public class Group8 extends AbstractNegotiationParty {
 				}
 			}
 		}
+	}
+
+	/**
+	 * find next agent among list of opponents
+	 * @return model of next agent
+	 */
+	private OpponentModel getNextAgentModel() {
+		OpponentModel nextAgent = null;
+		
+		for (OpponentModel opponent : this.opponents) {
+			if (opponent.agent.getPartyId().equals(this.mostRecentBidder.getPartyId())) {
+				int indexOfPreviousBidder = this.opponents.indexOf(mostRecentBidder);
+				
+				int indexOfNextAgent = (indexOfPreviousBidder + 1)%this.opponents.size();
+				
+				nextAgent = this.opponents.get(indexOfNextAgent);
+				break;
+			}
+		}
+		return nextAgent;
 	}
 
 
