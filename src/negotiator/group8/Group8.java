@@ -81,58 +81,67 @@ public class Group8 extends AbstractNegotiationParty {
 			
 			return new Offer(firstBid);
 		}
+		//choosing action after a bid has been made
 		else
 		{
-			double lastBidUtility;
+			//evaluate the utility of most recent bid
+			double utilityOfMostRecentBid;
 			
 			try {
-				lastBidUtility = this.utilitySpace.getUtility(this.mostRecentBid);
+				utilityOfMostRecentBid = this.utilitySpace.getUtility(this.mostRecentBid);
 			} 
 			catch (Exception e) {
-				lastBidUtility = 0;
+				utilityOfMostRecentBid = 0;
 				e.printStackTrace();
 			}
 			
-			if(lastBidUtility >= this.acceptanceValue)
+			//accept offer if utility is higher than our acceptance value
+			if(utilityOfMostRecentBid >= this.acceptanceValue) {
 				return new Accept();
-			else 
-			{
+			}
+			//make counter offer 
+			else {
+				//generate some high utility bids
 				List<Bid> possibleBids = generateHigherUtilityBid(this.acceptanceValue);
 				
-				if (this.roundCounter < 5)
-				{
+				//when too few rounds have passed, offer a random high utility bid
+				if (this.roundCounter < 5) {
 					return new Offer(possibleBids.get(0));
 				}
-				else
-				{
-					OpponentModel senderModel = null;
+				//among high utility bids choose one that has best utility for next agent
+				else {
+					//find next agent among list of opponents
+					OpponentModel nextAgent = null;
 					
-					for (OpponentModel opponent : this.opponents)
-					{
-						if (opponent.agent.getPartyId().equals(this.mostRecentBidder.getPartyId()))
-						{
-							int index = this.opponents.indexOf(mostRecentBidder);
-							//senderModel = opponent;
-							senderModel = this.opponents.get((index + 1)%this.opponents.size());
+					for (OpponentModel opponent : this.opponents) {
+						
+						if (opponent.agent.getPartyId().equals(this.mostRecentBidder.getPartyId())) {
+							
+							int indexOfPreviousBidder = this.opponents.indexOf(mostRecentBidder);
+							
+							int indexOfNextAgent = (indexOfPreviousBidder + 1)%this.opponents.size();
+							
+							nextAgent = this.opponents.get(indexOfNextAgent);
 							break;
 						}
 					}
 					
+					//find bid with highest utility for next agent
 					double maxUtilityForOpponent = 0.0;
-					Bid bestBid = null;
+					Bid bestBidForNextAgent = null;
 					
 					for (Bid bid : possibleBids)
 					{
-						double bidUtility = senderModel.EvaluateBidUtility(bid);
+						double bidUtility = nextAgent.EvaluateBidUtility(bid);
 						
 						if (bidUtility > maxUtilityForOpponent)
 						{
-							bestBid = bid;
+							bestBidForNextAgent = bid;
 							maxUtilityForOpponent = bidUtility;
 						}
 					}
 					
-					return new Offer(bestBid);
+					return new Offer(bestBidForNextAgent);
 				}
 				
 			}
