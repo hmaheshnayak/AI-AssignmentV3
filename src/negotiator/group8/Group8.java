@@ -72,11 +72,14 @@ public class Group8 extends AbstractNegotiationParty {
 	public Action chooseAction(List<Class> validActions) {
 		this.roundCounter++;
 		
-		double tempAcceptanceValue = this.acceptanceValue;
-		tempAcceptanceValue = 0.9 + 1 - Math.pow(Math.pow(1.9, 1/this.totalRounds), Math.pow(this.acceptanceValue,(this.totalRounds) / this.roundCounter ) * (this.roundCounter-1));
+		//double tempAcceptanceValue = this.acceptanceValue;
+		this.acceptanceValue = 0.9 + 1 - Math.pow(Math.pow(1.9, 1/this.totalRounds), Math.pow(this.acceptanceValue,(this.totalRounds) / this.roundCounter ) * (this.roundCounter-1));
 		
+		//first bid - offer a bid with high utility value for self
 		if (!validActions.contains(Accept.class)) {
-			return new Offer(generateHigherUtilityBid(tempAcceptanceValue).get(0));
+			Bid firstBid = this.generateHigherUtilityBid(this.acceptanceValue).get(0);
+			
+			return new Offer(firstBid);
 		}
 		else
 		{
@@ -90,11 +93,11 @@ public class Group8 extends AbstractNegotiationParty {
 				e.printStackTrace();
 			}
 			
-			if(lastBidUtility >= tempAcceptanceValue)
+			if(lastBidUtility >= this.acceptanceValue)
 				return new Accept();
 			else 
 			{
-				List<Bid> possibleBids = generateHigherUtilityBid(tempAcceptanceValue);
+				List<Bid> possibleBids = generateHigherUtilityBid(this.acceptanceValue);
 				
 				if (this.roundCounter < 5)
 				{
