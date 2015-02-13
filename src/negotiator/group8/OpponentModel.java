@@ -68,6 +68,121 @@ public class OpponentModel {
 	}
 	
 	/**
+	 * store bids made by this opponent for preference analysis
+	 * @param bid
+	 */
+	public void AddBid(Bid bid) {
+		if (bid != null) {
+			this.bidsMadeByAgent.add(bid);
+			
+			this.UpdateIssueValueFrequencies(bid);
+		}
+		
+		this.AnalyzeIssueValuePreferences();
+	}
+	
+	/**
+	 * update the count of bids made for every issue value
+	 * @param newBid the bid based on which to update frequencies
+	 */
+	public void UpdateIssueValueFrequencies(Bid newBid)
+	{
+		for (int i = 0; i < newBid.getIssues().size(); i++) {
+			Issue issue = newBid.getIssues().get(i);
+			Value issueValue = null;
+			
+			try {
+				issueValue = newBid.getValue(i+1);
+			}
+			catch(Exception e){
+				e.printStackTrace();
+				return;
+			}
+			
+			Map<Value, Integer> valueMapping = issueValueFrequencies.get(issue);
+			
+			int currentFrequency = 0;
+			if (valueMapping.containsKey(issueValue)) {
+				currentFrequency = valueMapping.get(issueValue);
+				currentFrequency++;
+				
+				valueMapping.put(issueValue, currentFrequency);
+			}
+			else {
+				currentFrequency++;
+				valueMapping.put(issueValue, currentFrequency);
+			}
+		}
+	}
+	
+	/**
+	 * method to analyze agent issue value preferences by bid frequency analysis
+	 */
+	public void AnalyzeIssueValuePreferences() {
+		Iterator it = this.issueValueFrequencies.entrySet().iterator();
+		
+		sortedIssueValueFrequencies = new HashMap<Issue, Map<Value,Integer>>();
+	
+		while(it.hasNext()) {
+			Map.Entry<Issue, Map<Value, Integer>> pair = (Map.Entry<Issue, Map<Value,Integer>>)it.next();
+			Issue issue = pair.getKey();
+			Map<Value,Integer> valueFrequencies = pair.getValue();
+			
+			//assign issue weights as inverse of number of different choices made for the issue
+			double issueWeight = 1 /(double)valueFrequencies.size();
+			this.issueWeights.put(issue, issueWeight);
+			
+			//sort the issue values by frequency of bids that target the particular value
+			ValueComparator bvc =  new ValueComparator(valueFrequencies);
+	        TreeMap<Value,Integer> sorted_map = new TreeMap<Value,Integer>(bvc);
+	        sorted_map.putAll(valueFrequencies);
+	        
+	        int highestFrequency = sorted_map.firstEntry().getValue();
+	        Iterator valueIterator = sorted_map.entrySet().iterator();
+	        Map<Value, Double> evals = new HashMap<Value, Double>();
+	        
+	        //evaluation value of an issue value is the number of times the value was bid for
+	        //divided by the number of times the highest bid value was bid for
+	        while(valueIterator.hasNext()){
+	        	Map.Entry<Value, Integer> valuePair = (Map.Entry<Value, Integer>)valueIterator.next();
+	        	
+	        	int valueFrequency = valuePair.getValue();
+	        	
+	        	double evaluationValue = valueFrequency / (double)highestFrequency;
+	        	
+	        	evals.put(valuePair.getKey(), evaluationValue);
+	        }
+	        
+	        this.issueEvaluationValues.put(issue, evals);
+	        this.sortedIssueValueFrequencies.put(issue, sorted_map);
+		}
+		
+		this.UpdateIssueWeights();
+	}
+	
+	/**
+	 * method to estimate issue weights
+	 */
+	public void UpdateIssueWeights() {
+		Iterator it = this.issueWeights.entrySet().iterator();
+		double weightSum = 0.0;
+		
+		while(it.hasNext()) {
+			Map.Entry<Value, Double> weightPair = (Map.Entry<Value, Double>)it.next();
+        	
+			weightSum += weightPair.getValue();
+		}
+		
+		it = this.issueWeights.entrySet().iterator();
+		
+		while(it.hasNext()) {
+			Map.Entry<Value, Double> weightPair = (Map.Entry<Value, Double>)it.next();
+        	
+			weightPair.setValue(weightPair.getValue() / weightSum);
+		}
+	}
+	
+	/**
 	 * method to evaluate the utility of a bid for this agent
 	 * @param bidToEvaluate bid whose utility to evaluate
 	 * @return utility of bid for this agent
@@ -105,122 +220,6 @@ public class OpponentModel {
 	}
 	
 	/**
-	 * store bids made by this opponent for preference analysis
-	 * @param bid
-	 */
-	public void AddBid(Bid bid) {
-		
-		if (bid != null) {
-			this.bidsMadeByAgent.add(bid);
-			
-			this.UpdateIssueValueFrequencies(bid);
-		}
-		
-		this.AnalyzeIssueValuePreferences();
-	}
-	
-	public void AnalyzeIssueValuePreferences() {
-		Iterator it = this.issueValueFrequencies.entrySet().iterator();
-		
-		sortedIssueValueFrequencies = new HashMap<Issue, Map<Value,Integer>>();
-	
-		while(it.hasNext()){
-			Map.Entry<Issue, Map<Value, Integer>> pair = (Map.Entry<Issue, Map<Value,Integer>>)it.next();
-			Issue issue = pair.getKey();
-			Map<Value,Integer> valueFrequecies = pair.getValue();
-			
-			double issueWeight = 1 /(double) valueFrequecies.size();
-			
-			this.issueWeights.put(issue, issueWeight);
-			
-			ValueComparator bvc =  new ValueComparator(valueFrequecies);
-	        TreeMap<Value,Integer> sorted_map = new TreeMap<Value,Integer>(bvc);
-	        sorted_map.putAll(valueFrequecies);
-	        
-	        int highestFrequency = sorted_map.firstEntry().getValue();
-
-	        Iterator valueIterator = sorted_map.entrySet().iterator();
-	        Map<Value, Double> evals = new HashMap<Value, Double>();
-	        
-	        while(valueIterator.hasNext())
-	        {
-	        	Map.Entry<Value, Integer> valuePair = (Map.Entry<Value, Integer>)valueIterator.next();
-	        	
-	        	int valueFrequency = valuePair.getValue();
-	        	
-	        	double evaluationValue = valueFrequency / (double)highestFrequency;
-	        	
-	        	evals.put(valuePair.getKey(), evaluationValue);
-	        	
-	        }
-	        
-	        this.issueEvaluationValues.put(issue, evals);
-	        
-	        sortedIssueValueFrequencies.put(issue, sorted_map);
-		}
-		
-		this.UpdateIssueWeights();
-	}
-	
-	public void UpdateIssueWeights()
-	{
-		Iterator it = this.issueWeights.entrySet().iterator();
-		double weightSum = 0.0;
-		
-		while(it.hasNext())
-		{
-			Map.Entry<Value, Double> weightPair = (Map.Entry<Value, Double>)it.next();
-        	
-			weightSum += weightPair.getValue();
-		}
-		
-		it = this.issueWeights.entrySet().iterator();
-		
-		while(it.hasNext())
-		{
-			Map.Entry<Value, Double> weightPair = (Map.Entry<Value, Double>)it.next();
-        	
-			weightPair.setValue(weightPair.getValue() / weightSum);
-		}
-		
-	}
-
-	public void UpdateIssueValueFrequencies(Bid newBid)
-	{
-			for (int i = 0; i < newBid.getIssues().size(); i++)
-			{
-				Issue issue = newBid.getIssues().get(i);
-				Value issueValue = null;
-				
-				try {
-					issueValue = newBid.getValue(i+1);
-				}
-				catch(Exception e){
-					e.printStackTrace();
-					return;
-				}
-				
-				Map<Value, Integer> valueMapping = issueValueFrequencies.get(issue);
-				
-				int currentFrequency = 0;
-				if (valueMapping.containsKey(issueValue))
-				{
-					currentFrequency = valueMapping.get(issueValue);
-					currentFrequency++;
-					
-					valueMapping.put(issueValue, currentFrequency);
-				}
-				else
-				{
-					currentFrequency++;
-					valueMapping.put(issueValue, currentFrequency);
-				}
-			}
-
-		
-	}
-	
-	/**
 	 * overridden equals method to compare two OpponentModel objects
 	 * they are equal if they model the same agent, determined by agentID
 	 * @param object object being compared
@@ -230,12 +229,10 @@ public class OpponentModel {
 	{
 		boolean result = false;
 		
-		if (object instanceof OpponentModel)
-		{
+		if (object instanceof OpponentModel) {
 			OpponentModel toCompare = (OpponentModel)object;
 			
-			if (this.agent.getPartyId().equals(toCompare.agent.getPartyId()))
-			{
+			if (this.agent.getPartyId().equals(toCompare.agent.getPartyId())) {
 				result = true;
 			}
 		}
@@ -245,11 +242,9 @@ public class OpponentModel {
 	
 	/**
 	 * Class that is used to compare issue values
-	 * @author Group8
 	 *
 	 */
 	class ValueComparator implements Comparator<Value> {
-
 	    Map<Value, Integer> base;
 	    public ValueComparator(Map<Value, Integer> base) {
 	        this.base = base;
@@ -261,7 +256,7 @@ public class OpponentModel {
 	            return -1;
 	        } else {
 	            return 1;
-	        } // returning 0 would merge keys
+	        }
 	    }
 	}
 }
